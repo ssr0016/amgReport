@@ -287,3 +287,73 @@ func (s *store) delete(ctx context.Context, id int64) error {
 		return nil
 	})
 }
+
+func (s *store) registerDefaultUser(ctx context.Context, cmd *user.RegisterUserCommand, role string) error {
+	return s.db.WithTransaction(ctx, func(ctx context.Context, tx db.Tx) error {
+		rawSQL := `
+			INSERT INTO users (
+				first_name,
+				last_name,
+				email,
+				password_hash,
+				address,
+				phone_number,
+				date_of_birth,
+				role
+			) VALUES (
+				$1, $2, $3, $4, $5, $6, $7, $8
+			) RETURNING id
+		`
+
+		var id int64
+		err := tx.QueryRow(
+			ctx,
+			rawSQL,
+			cmd.FirstName,
+			cmd.LastName,
+			cmd.Email,
+			cmd.Password,
+			cmd.Address,
+			cmd.PhoneNumber,
+			cmd.DateOfBirth,
+			role,
+		).Scan(&id)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (s *store) getUserByEmail(ctx context.Context, email string) (*user.User, error) {
+	var user user.User
+
+	rawSQL := `
+		SELECT
+			id,
+			first_name,
+			last_name,
+			email,
+			password_hash,
+			address,
+			phone_number,
+			date_of_birth,
+			role
+		FROM
+			users
+		WHERE
+			email = $1
+	`
+
+	err := s.db.Get(ctx, &user, rawSQL, email)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
+
+	return &user, nil
+}

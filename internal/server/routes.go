@@ -29,8 +29,13 @@ func (s *Server) SetupRoutes() {
 	api.Get("/health", healthCheck(s.db))
 
 	// User Routes
+
 	user := userimpl.NewService(s.db, s.cfg)
 	userHttp := rest.NewUserHandler(user)
+
+	api.Post("/users/register", userHttp.RegisterDefaultUser)
+	api.Post("/users/login", userHttp.LoginUser)
+
 	api.Post("/users", userHttp.CreateUser)
 	api.Get("/users", userHttp.SearchUser)
 	api.Get("/users/:id", userHttp.GetByUserID)

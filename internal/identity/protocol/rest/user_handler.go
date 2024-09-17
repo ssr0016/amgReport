@@ -109,3 +109,50 @@ func (h *userHandler) DeleteUser(ctx *fiber.Ctx) error {
 		"message": "user deleted successfully!",
 	})
 }
+
+func (h *userHandler) RegisterDefaultUser(ctx *fiber.Ctx) error {
+	var cmd user.RegisterUserCommand
+
+	err := ctx.BodyParser(&cmd)
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Validate()
+	if err != nil {
+		return errors.ErrorBadRequest(err)
+	}
+
+	err = h.s.RegisterDefaultUser(ctx.Context(), &cmd)
+	if err != nil {
+		return errors.ErrorInternalServerError(err)
+	}
+
+	return response.Ok(ctx, fiber.Map{
+		"user data": cmd,
+	})
+}
+
+func (h *userHandler) LoginUser(ctx *fiber.Ctx) error {
+	var cmd user.LoginUserCommand
+
+	err := ctx.BodyParser(&cmd)
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Validate()
+	if err != nil {
+		return errors.ErrorBadRequest(err)
+	}
+
+	result, err := h.s.GetUserByEmail(ctx.Context(), &cmd)
+	if err != nil {
+		if err == user.ErrUserNotFound || err == user.ErrInvalidPassword {
+			return errors.ErrorUnauthorized(err, "Invalid email or password")
+		}
+		return errors.ErrorInternalServerError(err)
+	}
+
+	return response.Ok(ctx, result)
+}

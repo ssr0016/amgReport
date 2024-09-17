@@ -126,3 +126,50 @@ func (s *service) DeleteUser(ctx context.Context, id int64) error {
 
 	return nil
 }
+
+func (s *service) RegisterDefaultUser(ctx context.Context, cmd *user.RegisterUserCommand) error {
+	role := "user"
+
+	return s.db.WithTransaction(ctx, func(ctx context.Context, tx db.Tx) error {
+		result, err := s.store.userTaken(ctx, 0, cmd.Email)
+		if err != nil {
+			return err
+		}
+
+		if len(result) > 0 {
+			return user.ErrUserAlreadyExists
+		}
+
+		passwordHash, err := util.HashPassword(cmd.Password)
+		if err != nil {
+			return err
+		}
+
+		cmd.Password = passwordHash
+
+		err = s.store.registerDefaultUser(ctx, cmd, role)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (s *service) GetUserByEmail(ctx context.Context, cmd *user.LoginUserCommand) (string, error) {
+	result, err := s.store.getUserByEmail(ctx, cmd.Email)
+	if err != nil {
+		return "", err
+	}
+
+	if result == nil {
+		return "", user.ErrUserNotFound
+	}
+
+	err = util.CheckPasswordHash(result.PasswordHash, cmd.Password)
+	if err != nil {
+		return "", user.ErrInvalidPassword
+	}
+
+	return result.Email, nil
+}

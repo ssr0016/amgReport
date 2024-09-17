@@ -92,6 +92,16 @@ type SearchUserResult struct {
 	PerPage    int     `json:"per_page"`
 }
 
+type RegisterUserCommand struct {
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Email       string `json:"email"`
+	Password    string `json:"password_hash"`
+	Address     string `json:"address"`
+	PhoneNumber string `json:"phone_number"`
+	DateOfBirth string `json:"date_of_birth"`
+}
+
 type LoginUserCommand struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
@@ -151,6 +161,42 @@ func (cmd *UpdateUserCommand) Validate() error {
 	}
 	if !IsValidRole(cmd.Role) {
 		return ErrorInvalidRole
+	}
+	return nil
+}
+
+func (cmd *RegisterUserCommand) Validate() error {
+	if len(cmd.FirstName) == 0 || len(cmd.FirstName) <= 2 {
+		return ErrInvalidFirstName
+	}
+	if len(cmd.LastName) == 0 || len(cmd.LastName) <= 2 {
+		return ErrInvalidLastName
+	}
+	if len(cmd.Email) == 0 || !validation.IsValidEmail(cmd.Email) {
+		return ErrInvalidEmail
+	}
+	if len(cmd.Password) == 0 || !util.IsValidPassword(cmd.Password) {
+		return ErrInvalidPassword
+	}
+	if len(cmd.Address) == 0 {
+		return ErrInvalidAddress
+	}
+	if len(cmd.PhoneNumber) == 0 {
+		return ErrInvalidPhoneNumber
+	}
+	if len(cmd.DateOfBirth) == 0 {
+		return ErrInvalidDateOfBirth
+	}
+	return nil
+}
+
+// Validation for LoginUserCommand
+func (cmd *LoginUserCommand) Validate() error {
+	if len(cmd.Email) == 0 || !validation.IsValidEmail(cmd.Email) {
+		return ErrInvalidEmail
+	}
+	if len(cmd.Password) == 0 || !util.IsValidPassword(cmd.Password) {
+		return ErrInvalidPassword
 	}
 	return nil
 }
