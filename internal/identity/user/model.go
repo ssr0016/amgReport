@@ -2,8 +2,8 @@ package user
 
 import (
 	"amg/internal/api/errors"
-	util "amg/pkg/password"
-	"amg/pkg/validation"
+	util "amg/pkg/util/password"
+	"amg/pkg/util/validation"
 	"strings"
 )
 

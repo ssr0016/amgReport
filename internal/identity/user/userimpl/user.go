@@ -4,7 +4,8 @@ import (
 	"amg/config"
 	"amg/internal/db"
 	"amg/internal/identity/user"
-	util "amg/pkg/password"
+	"amg/pkg/util/jwt"
+	util "amg/pkg/util/password"
 	"context"
 
 	"go.uber.org/zap"
@@ -171,5 +172,10 @@ func (s *service) GetUserByEmail(ctx context.Context, cmd *user.LoginUserCommand
 		return "", user.ErrInvalidPassword
 	}
 
-	return result.Email, nil
+	token, err := jwt.GenerateToken(result.Email, result.Role)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
 }
