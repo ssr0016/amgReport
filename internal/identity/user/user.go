@@ -11,4 +11,7 @@ type Service interface {
 	GetUserByEmail(ctx context.Context, cmd *LoginUserCommand) (string, error)
 
 	RegisterDefaultUser(ctx context.Context, cmd *RegisterUserCommand) error
+
+	IsTokenBlacklisted(ctx context.Context, token string) (bool, error)
+	InvalidateToken(ctx context.Context, token string) error
 }

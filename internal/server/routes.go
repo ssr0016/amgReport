@@ -5,6 +5,7 @@ import (
 	"amg/internal/db"
 	"amg/internal/identity/protocol/rest"
 	"amg/internal/identity/user/userimpl"
+	"amg/internal/middleware"
 	"errors"
 
 	"github.com/gofiber/fiber/v2"
@@ -36,10 +37,14 @@ func (s *Server) SetupRoutes() {
 	api.Post("/users/register", userHttp.RegisterDefaultUser)
 	api.Post("/users/login", userHttp.LoginUser)
 
+	api.Use(middleware.JWTProtected(s.jwtSecret, user))
 	api.Post("/users", userHttp.CreateUser)
 	api.Get("/users", userHttp.SearchUser)
 	api.Get("/users/:id", userHttp.GetByUserID)
 	api.Put("/users/:id", userHttp.UpdateUser)
 	api.Delete("/users/:id", userHttp.DeleteUser)
+
+	// Logout
+	api.Post("/users/logout", userHttp.LogoutUser)
 
 }
